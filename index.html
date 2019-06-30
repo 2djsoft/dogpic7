@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>개픽세븐</title>
+
+<style>
+*,html,body {margin:0;padding:0; box-sizing: border-box;}
+#stage  {width: 100%; height: 400px; background: #049a45; padding: 140px 20px 20px; position: relative;}
+#map1,#map2 { width: 320px; font-size: 0;}
+#map1 {float: left;}
+#map2 {float: right;}
+.sell {width: 100px; height: 100px; border:1px solid #fff; display: inline-block; vertical-align: middle;}
+.sell > span {display: block;width: 60px; height: 60px; border-radius: 50%; background: #ff6600; margin: 20px; color:#fff; font-size: 14px; line-height: 60px; text-align: center; cursor: pointer;}
+.sell > span.turn {border:2px solid #fff;}
+.sell > span.onTarget {border:3px solid #f90000;}
+#stats {background: #4e4e4e; padding:30px; color:#fff; line-height: 1.5;}
+#timevar {position: absolute; top:20px; left: 20px;right: 20px; height: 40px; background: #e8e626; font-size: 15px; text-align: left; color:#000; font-weight: bold;}
+#timevar b {display: inline-block; background: #fff; color:#000; border-radius: 10px; padding:5px 10px; margin:5px;}
+</style>
+</head>
+<body>
+
+<div id="stage">
+    <h2>player <span id="pyturn"></span></h2>
+    <div id="map1" data-play="1">
+        <div class="map1 sell" data-sell="1"></div>
+        <div class="map2 sell"></div>
+        <div class="map3 sell"></div>
+        <div class="map4 sell"></div>
+        <div class="map5 sell"></div>
+        <div class="map6 sell"></div>    
+    </div>
+    <div id="map2" data-play="2">
+        <div class="map1 sell"></div>
+        <div class="map2 sell"></div>
+        <div class="map3 sell"></div>
+        <div class="map4 sell"></div>
+        <div class="map5 sell"></div>
+        <div class="map6 sell"></div>    
+    </div>
+    <div id="timevar"></div>
+    <div id="userInerface"></div>
+</div>
+<div id="stats">
+    
+</div>
+
+<script src="jquery.1.12.4.min.js"></script>
+<script>
+var attack = function(min,max){
+    return Math.floor(Math.random() * (max - min) + min);
+}
+function skillType(){
+    return 50;
+}
+var unit = new Array();
+var anna = {
+    "att":attack(10,88),
+    "def":4,
+    "hp":100,
+    "mp":300,
+    "skill":70,
+    "speed":10.11,
+    "nowSpeed":10.11
+}
+var nina = {
+    "att":attack(10,88),
+    "def":4,
+    "hp":100,
+    "mp":300,
+    "skill":80,
+    "speed":60.99,
+    "nowSpeed":60.99
+}
+unit = {"anna":anna, "nina":nina};
+
+function turnUnit(unitName){
+    var myTurnUnit = $('#stage').find('span.unit[data-unit='+unitName+']');
+    myTurnUnit.addClass('turn');
+    $('#userInerface').empty().append('<button type="button" id="attBtn">공격</button>');
+    var player = myTurnUnit.parent().parent();
+    var ennemy;
+    $('#pyturn').text(player.data('play'));
+    if(player.data('play') == 1){
+        ennemy = 2;
+    }else{
+        ennemy = 1;
+    }
+    $('#map'+player.data('play')+' span.unit').unbind('click');
+    $('#map'+ennemy+' span.unit').unbind('click').bind('click',function(){
+        $(this).addClass('onTarget');
+        targetEnnermy = $(this).data('unit');
+    });
+    var targetEnnermy;
+    $('#attBtn').unbind('click').bind('click',function(){
+        if(targetEnnermy){
+            unit[targetEnnermy].hp = unit[targetEnnermy].hp - unit[unitName].att;
+            unit[unitName].speed = unit[unitName].nowSpeed+unit[unitName].speed;
+            myTurnUnit.removeClass('turn');
+            $('span.unit').removeClass('onTarget');
+            printUnit();
+            actionUnit();
+        }else{
+            alert("공격대상이 없습니다");
+        }
+    });
+
+}
+
+
+function actionUnit(){
+    var timeGraph = new Array();
+    $('#stage').find('span.unit').each(function(){
+        timeGraph.push({"unit":$(this).data('unit'),"speed":unit[$(this).data('unit')].speed});
+    });
+    timeGraph.sort(function(a,b) {
+        return parseInt(a.speed,10) - parseInt(b.speed,10);
+    });
+    $('#timevar').empty();
+    $('#stage').find('span.unit').each(function(index){
+        $('#timevar').append('<b data-unit="'+timeGraph[index].unit+'">'+timeGraph[index].unit+'('+timeGraph[index].speed+')</b>');
+    });
+    turnUnit($('#timevar').find('b').eq(0).data('unit'));
+}
+
+function printUnit(){
+    $('#stats').empty();
+    for(var k in unit){
+        $('#stats').append("<hr><h2>"+k+"</h2>");
+        for(var i in unit[k]){
+            $('#stats').append(i + ' : '+ unit[k][i] + '<br>');
+        }
+        $('#stats').append("<hr>");
+    }
+}
+
+$(function(){
+
+    var setTail = 1;
+    
+    $('#map1 > .map'+setTail).append('<span class="unit" data-unit="anna" \
+        data-att="'+unit.anna.att+'"\
+        data-def="'+unit.anna.def+'"\
+        data-hp="'+unit.anna.hp+'"\
+        data-mp="'+unit.anna.mp+'"\
+        data-speed="'+unit.anna.speed+'"\
+        >anna</span>');
+    $('#map2 > .map'+setTail).append('<span class="unit" data-unit="nina" \
+        data-att="'+unit.nina.att+'"\
+        data-def="'+unit.nina.def+'"\
+        data-hp="'+unit.nina.hp+'"\
+        data-mp="'+unit.nina.mp+'"\
+        data-speed="'+unit.nina.speed+'"\
+        >nina</span>');
+
+    actionUnit();
+    printUnit();
+
+});
+</script>
+
+</body>
+</html>
